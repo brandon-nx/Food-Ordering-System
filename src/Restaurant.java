@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 class Restaurant {
-    private final String name;
-    private final List<MenuItem> menu;
-    private final List<SpecialOffer> specialOffers;
-    private final Inventory inventory;
+    private String name;
+    private List<MenuItem> menu;
+    private List<SpecialOffer> specialOffers;
+    private Inventory inventory;
 
     public Restaurant(String name) {
         this.name = name;
@@ -16,6 +16,8 @@ class Restaurant {
         this.inventory = new Inventory();
     }
 
+
+    // Getters and Setters
     public String getName() {
         return name;
     }
@@ -24,11 +26,18 @@ class Restaurant {
         return menu;
     }
 
+    // Method to add item to menu
     public void addToMenu(MenuItem menuItem, int initialStock) {
         menu.add(menuItem);
         inventory.updateInventory(menuItem, initialStock);
     }
 
+    // Method to remove item from the menu
+    public void removeMenuItem(String itemName) {
+        menu.removeIf(item -> item.getName().equalsIgnoreCase(itemName));
+    }
+
+    // Method to add special offer to menu
     public void addSpecialOffer(SpecialOffer specialOffer) {
         specialOffers.add(specialOffer);
     }
@@ -58,16 +67,14 @@ class Restaurant {
         return true;
     }
 
-    public void updateInventory(MenuItem item, int quantity) {
-        inventory.updateInventory(item, quantity);
-    }
-
     public boolean isItemAvailable(MenuItem item, int quantity) {
         return inventory.checkAvailability(item) >= quantity;
     }
 
-    public void removeMenuItem(String itemName) {
-        menu.removeIf(item -> item.getName().equalsIgnoreCase(itemName));
+
+    // Method to update the menu
+    public void updateInventory(MenuItem item, int quantity) {
+        inventory.updateInventory(item, quantity);
     }
 
     public void updateMenuItemPrice(String itemName, double newPrice) {
@@ -91,6 +98,7 @@ abstract class MenuItem {
         this.description = description;
     }
 
+    // Getters and Setters
     public String getName() {
         return name;
     }
@@ -161,7 +169,7 @@ class Inventory {
 
 class SpecialOffer {
     private String offerDescription;
-    private double discount; // This is a percentage (e.g., 10 for 10%)
+    private double discount;
 
     public SpecialOffer(String offerDescription, double discount) {
         this.offerDescription = offerDescription;

@@ -2,8 +2,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Cart {
-    private final List<CartItem> items;
+    private List<CartItem> items;
 
+
+    // Getters and Setters
     public Cart() {
         this.items = new ArrayList<>();
     }
@@ -58,6 +60,7 @@ class CartItem {
         this.quantity = quantity;
     }
 
+    // Getters and Setters
     public MenuItem getMenuItem() {
         return menuItem;
     }

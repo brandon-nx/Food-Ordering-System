@@ -7,7 +7,7 @@ public class Main {
         System.out.println("Welcome to " + restaurant.getName() + "!");
         System.out.println("Menu:");
         for (MenuItem menuItem : restaurant.getMenu()) {
-            System.out.println(menuItem.getName() + " - $" + menuItem.getPrice());
+            System.out.println(menuItem.getName() + " - RM" + menuItem.getPrice());
         }
         System.out.println();
     }
@@ -108,17 +108,21 @@ public class Main {
             String itemName = entry.getKey();
             int quantity = entry.getValue();
             double totalCost = itemSummary.get(itemName);
-            System.out.println(quantity + " x " + itemName + " - $" + String.format("%.2f", totalCost));
+            System.out.println(quantity + " x " + itemName + " - RM" + String.format("%.2f", totalCost));
         }
 
-        System.out.println("Total Cost: $" + String.format("%.2f", cart.calculateTotalCost()));
+        System.out.println("Total Cost: RM" + String.format("%.2f", cart.calculateTotalCost()));
     }
 
     public static void main(String[] args) {
         // Create a sample restaurant with a menu
-        Restaurant restaurant = new Restaurant("Sample Restaurant");
-        restaurant.addToMenu(new FoodItem("Burger", 8.99, "Delicious burger with all the fixings", "American"), 10);
-        restaurant.addToMenu(new DrinkItem("Cola", 2.49, "Refreshing cola drink", "Soda Drink"), 20);
+        Restaurant restaurant = new Restaurant("OrderEat Restaurant");
+        restaurant.addToMenu(new FoodItem("Cheese Burger", 9.90, "Delicious cheesy chicken burger with pickle inside", "American"), 10);
+        restaurant.addToMenu(new FoodItem("Chicken Chop", 14.90, "Delicious chicken chop sides with wedges and salad", "Western"), 10);
+        restaurant.addToMenu(new FoodItem("Carbonara Pasta", 12.90, "Delicious creamy cheesy spaghetti with chicken slices", "Italian"), 10);
+        restaurant.addToMenu(new DrinkItem("Cola", 2.90, "Refreshing cola drink", "Soft Drink"), 20);
+        restaurant.addToMenu(new DrinkItem("Sprite", 2.90, "Refreshing cola drink", "Soft Drink"), 20);
+        restaurant.addToMenu(new DrinkItem("Ice Lemon Tea", 2.90, "Refreshing cola drink", "Soft Drink"), 20);
 
         // Adding special offers
         SpecialOffer offer = new SpecialOffer("10% Off Everything", 10.0);

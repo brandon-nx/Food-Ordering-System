@@ -2,9 +2,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 class User {
-    private final String name;
-    private final String contactInfo;
-    private final String deliveryAddress;
+    private String name;
+    private String contactInfo;
+    private String deliveryAddress;
     private List<Order> orderHistory; // To store the history of orders
 
     public User(String name, String contactInfo, String deliveryAddress) {
@@ -14,7 +14,7 @@ class User {
         this.orderHistory = new ArrayList<>(); // Initialize the order history list
     }
 
-    // Getter methods for name, contactInfo, and deliveryAddress
+    // Getters and Setters
     public String getName() {
         return name;
     }
@@ -27,7 +27,7 @@ class User {
         return deliveryAddress;
     }
 
-
+    // Method to place order
     public void placeOrder(Restaurant restaurant, Cart cart) {
         restaurant.processOrder(this, cart); // Pass the current user and the cart
         Order newOrder = new Order(this, restaurant, cart.getItems()); // Create a new order

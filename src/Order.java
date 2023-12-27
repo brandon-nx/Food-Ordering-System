@@ -2,9 +2,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Order {
-    private final User user;
-    private final Restaurant restaurant;
-    private final List<CartItem> items;
+    private User user;
+    private Restaurant restaurant;
+    private List<CartItem> items;
     private double totalCost;
     private List<SpecialOffer> applicableOffers;
 
@@ -21,6 +21,18 @@ class Order {
     // Overloaded constructor without special offers
     public Order(User user, Restaurant restaurant, List<CartItem> items) {
         this(user, restaurant, items, new ArrayList<>()); // Calls the main constructor with an empty list of offers
+    }
+
+    // Getter and Setters
+    public User getUser() {
+        return user;
+    }
+
+    public Restaurant getRestaurant() {
+        return restaurant;
+    }
+    public List<CartItem> getItems() {
+        return items;
     }
 
     // Method to calculate and update the total cost
@@ -44,16 +56,5 @@ class Order {
 
     public void confirmOrder() {
         // Additional logic for confirming the order
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public Restaurant getRestaurant() {
-        return restaurant;
-    }
-    public List<CartItem> getItems() {
-        return items;
     }
 }
