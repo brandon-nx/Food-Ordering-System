@@ -1,5 +1,14 @@
-import java.time.LocalDate;
-import java.util.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Scanner;
+import java.io.FileWriter;
+import java.io.IOException;
 
 // Part 1: Restaurant Class
 class Restaurant {
@@ -22,9 +31,29 @@ class Restaurant {
     public String getName() {
         return name;
     }
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public List<MenuItem> getMenu() {
         return menu;
+    }
+    public void setMenu(List<MenuItem> menu) {
+        this.menu = menu;
+    }
+
+    public List<SpecialOffer> getSpecialOffers() {
+        return specialOffers;
+    }
+    public void setSpecialOffers(List<SpecialOffer> specialOffers) {
+        this.specialOffers = specialOffers;
+    }
+
+    public Inventory getInventory() {
+        return inventory;
+    }
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
     }
 
     // Method to add item to menu
@@ -48,14 +77,26 @@ class Restaurant {
         Order order = new Order(customer, this, cart.getItems(), specialOffers);
 
         if (canFulfillOrder(order)) {
-            for (CartItem item : order.getItems()) {
-                updateInventory(item.getMenuItem(), -item.getQuantity());
+            try {
+                // Deduct items from inventory
+                for (CartItem item : order.getItems()) {
+                    updateInventory(item.getMenuItem(), -item.getQuantity());
+                }
+
+                // Confirm order and display total cost
+                order.confirmOrder();
+                System.out.println("Order confirmed! Total cost: $" + String.format("%.2f", order.getTotalCost()));
+                System.out.println("-----------------------------------");
+                return order;
+
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error processing order: " + e.getMessage());
+                System.out.println("-----------------------------------");
+                return null;
             }
-            order.confirmOrder();
-            System.out.println("Order confirmed! Total cost: $" + String.format("%.2f", order.getTotalCost()));
-            return order; // Return the processed order
         } else {
             System.out.println("Unable to process the order due to insufficient stock.");
+            System.out.println("-----------------------------------");
             return null;
         }
     }
@@ -113,6 +154,9 @@ abstract class MenuItem {
     public String getName() {
         return name;
     }
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public double getPrice() {
         return price;
@@ -124,6 +168,9 @@ abstract class MenuItem {
 
     public String getDescription() {
         return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
     }
 }
 
@@ -140,6 +187,14 @@ class FoodItem extends MenuItem {
         super(name, price, description);
         this.cuisineType = cuisineType;
     }
+
+    // Getters and Setters
+    public String getCuisineType() {
+        return cuisineType;
+    }
+    public void setCuisineType(String cuisineType) {
+        this.cuisineType = cuisineType;
+    }
 }
 
 
@@ -154,6 +209,14 @@ class DrinkItem extends MenuItem {
     // Constructor
     public DrinkItem(String name, double price, String description, String beverageType) {
         super(name, price, description);
+        this.beverageType = beverageType;
+    }
+
+    // Getters and Setters
+    public String getBeverageType() {
+        return beverageType;
+    }
+    public void setBeverageType(String beverageType) {
         this.beverageType = beverageType;
     }
 }
@@ -176,7 +239,7 @@ class Inventory {
         int currentStock = stock.getOrDefault(item, 0);
         int newStock = currentStock + quantity;
         if (newStock < 0) {
-            newStock = 0; // Prevent negative stock
+            throw new IllegalArgumentException("Cannot have negative stock.");
         }
         stock.put(item, newStock);
     }
@@ -210,6 +273,20 @@ class SpecialOffer {
     // Constructor
     public SpecialOffer(String offerDescription, double discount) {
         this.offerDescription = offerDescription;
+        this.discount = discount;
+    }
+
+    // Getters and Setters
+    public String getOfferDescription() {
+        return offerDescription;
+    }
+    public void setOfferDescription(String offerDescription) {
+        this.offerDescription = offerDescription;
+    }
+    public double getDiscount() {
+        return discount;
+    }
+    public void setDiscount(double discount) {
         this.discount = discount;
     }
 
@@ -293,6 +370,20 @@ class Customer {
         }
         System.out.println("-----------------------------------");
     }
+
+    // Method to serialise a Customer object
+    public String serialise() {
+        return memberId + "," + name + "," + contactNumber + "," + deliveryAddress;
+    }
+
+    // Static method to deserialise a string into a Customer object
+    public static Customer deserialise(String data) {
+        String[] parts = data.split(",");
+        if (parts.length != 4) {
+            throw new IllegalArgumentException("Invalid data format for deserialization");
+        }
+        return new Customer(parts[0], parts[1], parts[2], parts[3]);
+    }
 }
 
 
@@ -337,6 +428,7 @@ class Cart {
         if (items.isEmpty()) {
             System.out.println("-----------------------------------");
             System.out.println("Your cart is empty.");
+            System.out.println("-----------------------------------");
             return;
         }
 
@@ -365,7 +457,7 @@ class CartItem {
         this.quantity = quantity;
     }
 
-    // Getters and Setters
+    // Getters
     public MenuItem getMenuItem() {
         return menuItem;
     }
@@ -394,11 +486,6 @@ class Order {
         this.items = items;
         this.applicableOffers = offers;
         this.totalCost = calculateTotalCost();
-    }
-
-    // Overloaded constructor without special offers
-    public Order(Customer user, Restaurant restaurant, List<CartItem> items) {
-        this(user, restaurant, items, new ArrayList<>()); // Calls the main constructor with an empty list of offers
     }
 
     // Getter and Setters
@@ -450,13 +537,15 @@ public class FoodOrderingSystem {
     private Scanner userInput;
     private Map<String, Customer> customerMap;
     private List<Restaurant> restaurants;
+
     public FoodOrderingSystem() {
         // Initialise everything
         userInput = new Scanner(System.in);
         random = new Random();
-        customerMap = new HashMap<>();
         cart = new Cart();
         restaurants = new ArrayList<>();
+        customerMap = new HashMap<>();
+        loadCustomers("customers.txt");
 
         // Add restaurants
         restaurants.add(new Restaurant("Yummy Restaurant"));
@@ -476,19 +565,59 @@ public class FoodOrderingSystem {
         restaurants.get(1).addSpecialOffer(specialOffer);
     }
 
-    private void displayMenu(){
-        System.out.print("""
-                Welcome to FoodieBran!
-                -----------------------------------
-                1. Register as a New Member to get Exclusive Discount
-                2. Place Food Order
-                3. View Order History
-                4. Admin Login
-                5. Exit
-                -----------------------------------
-                Enter your choice:""");
+    // Method to save customers to a file
+    public void saveCustomers(String filename) {
+        try (FileWriter writer = new FileWriter(filename)) {
+            for (Customer customer : customerMap.values()) {
+                writer.write(customer.serialise() + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
+    // Method to load customers from a file
+    public void loadCustomers(String filename) {
+        File myObj = new File(filename);
+        try (Scanner myReader = new Scanner(myObj)) {
+            while (myReader.hasNextLine()) {
+                String data = myReader.nextLine();
+                Customer customer = Customer.deserialise(data);
+                customerMap.put(customer.getMemberId(), customer);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void displayMenu() {
+        System.out.println("Welcome to FoodieBran!");
+        System.out.println("-----------------------------------");
+        displaySpecialOffers();
+        System.out.print("""
+            1. Register as a New Member to get Exclusive Discount
+            2. Place Food Order
+            3. View Order History
+            4. Admin Login
+            5. Exit
+            -----------------------------------
+            Enter your choice:""");
+    }
+
+    private void displaySpecialOffers() {
+        System.out.println("Current Special Offers:");
+        boolean hasOffers = false;
+        for (Restaurant restaurant : restaurants) {
+            for (SpecialOffer offer : restaurant.getSpecialOffers()) {
+                System.out.println("- " + restaurant.getName() + ": " + offer.getOfferDescription());
+                hasOffers = true;
+            }
+        }
+        if (!hasOffers) {
+            System.out.println("No special offers available at the moment.");
+        }
+        System.out.println("-----------------------------------");
+    }
 
 
 
@@ -558,7 +687,7 @@ public class FoodOrderingSystem {
             }
 
             // Create a new cart for the current customer
-            Cart cart = new Cart();
+            cart = new Cart();
 
             // Prompt the user to choose which item to order
             boolean isOrdering = true;
@@ -569,6 +698,7 @@ public class FoodOrderingSystem {
                 switch (inputOrder.toLowerCase()) {
                     case "done":
                         isOrdering = false;
+                        finaliseOrder(selectedRestaurant);
                         break;
                     case "view":
                         cart.displayCartContents();
@@ -577,16 +707,9 @@ public class FoodOrderingSystem {
                         handleMenuItemSelection(selectedRestaurant, cart, inputOrder);
                 }
             }
-
-            if (!cart.getItems().isEmpty()) {
-                displayOrderSummary(cart);
-                Order newOrder = selectedRestaurant.processOrder(customer, cart); // Process the order and receive the Order object
-                if (newOrder != null) {
-                    customer.getOrderHistory().add(newOrder); // Add the new Order to the customer's order history
-                }
-            }
         }
     }
+
 
 
     private Restaurant getRestaurantChoiceAndMenu() {
@@ -597,7 +720,7 @@ public class FoodOrderingSystem {
         System.out.println((restaurants.size() + 1) + ". Return to main page");
         System.out.println("-----------------------------------");
 
-        int option = -1;  // Initialize option to an invalid value
+        int option;
 
         do {
             try {
@@ -643,6 +766,7 @@ public class FoodOrderingSystem {
 
             if (quantity > 0) {
                 if (restaurant.isItemAvailable(menuItem, quantity)) {
+                    restaurant.updateInventory(menuItem, -quantity);
                     cart.addItem(new CartItem(menuItem, quantity));
                     System.out.println("-----------------------------------");
                     System.out.println("Added " + quantity + " x " + menuItem.getName() + " to your cart.");
@@ -704,6 +828,20 @@ public class FoodOrderingSystem {
         System.out.println("-----------------------------------");
     }
 
+    private void finaliseOrder(Restaurant selectedRestaurant) {
+        if (cart.getItems().isEmpty()) {
+            System.out.println("-----------------------------------");
+            System.out.println("Your cart is empty. No charges applied.");
+            System.out.println("-----------------------------------");
+        } else {
+            displayOrderSummary(cart);
+            Order newOrder = selectedRestaurant.processOrder(customer, cart);
+            if (newOrder != null) {
+                customer.getOrderHistory().add(newOrder);
+            }
+        }
+    }
+
 
 
 
@@ -762,9 +900,15 @@ public class FoodOrderingSystem {
                     deleteData();
                     break;
                 case 3:
-                    viewData();
+                    modifyData();
                     break;
                 case 4:
+                    viewData();
+                    break;
+                case 5:
+                    restockItem();
+                    break;
+                case 6:
                     System.out.println("Exiting admin mode...");
                     System.out.println("-----------------------------------");
                     break;
@@ -772,7 +916,7 @@ public class FoodOrderingSystem {
                     System.out.println("Invalid option. Please try again (1-4).");
                     break;
             }
-        } while (adminOption != 4);
+        } while (adminOption != 6);
     }
 
     private void displayAdminMenu(){
@@ -781,8 +925,10 @@ public class FoodOrderingSystem {
                 Admin Menu:
                 1. Add Restaurant/Menu
                 2. Delete Restaurant/Menu
-                3. View All Existing Restaurant and Its Menu
-                4. Exit Admin Mode
+                3. Modify Restaurant/Menu
+                4. View All Existing Restaurant and Its Menu
+                5. Restock Menu Item
+                6. Exit Admin Mode
                 -----------------------------------
                 Enter your choice:""");
     }
@@ -837,9 +983,13 @@ public class FoodOrderingSystem {
             menuItem = new DrinkItem(itemName, itemPrice, itemDescription, beverageType);
         }
 
+        System.out.print("Enter initial stock quantity for this item: ");
+        int quantity = userInput.nextInt();
+        userInput.nextLine();
+
         if (menuItem != null) {
-            restaurant.addToMenu(menuItem, 10); // Assuming default stock of 10
-            System.out.println("Menu item added successfully.");
+            restaurant.addToMenu(menuItem, quantity); // Use the provided quantity
+            System.out.println("Menu item added successfully with initial stock of " + quantity + ".");
         } else {
             System.out.println("Invalid menu item type.");
         }
@@ -897,7 +1047,126 @@ public class FoodOrderingSystem {
         System.out.println("Menu item deleted successfully.");
     }
 
-    // Admin 3. View Data
+    // Admin 3. Modify Data
+    private void modifyData() {
+        System.out.print("Do you want to modify a Restaurant (R) or a Menu Item (M)? (R/M): ");
+        String choice = userInput.nextLine().toUpperCase();
+        System.out.println("-----------------------------------");
+
+        if (choice.equals("R")) {
+            modifyRestaurant();
+        } else if (choice.equals("M")) {
+            modifyMenuItem();
+        } else {
+            System.out.println("Invalid choice.");
+        }
+    }
+
+    private void modifyRestaurant() {
+        displayAllRestaurants();
+        System.out.println("-----------------------------------");
+        System.out.print("Enter the restaurant's number to modify: ");
+        int restaurantIndex = userInput.nextInt() - 1;
+        userInput.nextLine();
+        System.out.println("-----------------------------------");
+
+        if (restaurantIndex >= 0 && restaurantIndex < restaurants.size()) {
+            Restaurant selectedRestaurant = restaurants.get(restaurantIndex);
+            System.out.print("Enter new name for the restaurant: ");
+            String newName = userInput.nextLine();
+            selectedRestaurant.setName(newName);
+            System.out.println("-----------------------------------");
+            System.out.println("Restaurant name updated successfully.");
+        } else {
+            System.out.println("Invalid restaurant selection.");
+        }
+    }
+
+    private void modifyMenuItem() {
+        displayAllRestaurants();
+        System.out.println("-----------------------------------");
+        System.out.print("Enter the restaurant's number to modify its menu: ");
+        int restaurantIndex = userInput.nextInt() - 1;
+        userInput.nextLine();
+        System.out.println("-----------------------------------");
+
+        if (restaurantIndex >= 0 && restaurantIndex < restaurants.size()) {
+            Restaurant selectedRestaurant = restaurants.get(restaurantIndex);
+            displayMenuItems(selectedRestaurant);
+
+            System.out.print("Enter the name of the menu item to modify: ");
+            String itemName = userInput.nextLine();
+            MenuItem menuItem = findMenuItem(selectedRestaurant, itemName);
+            System.out.println("-----------------------------------");
+
+            if (menuItem != null) {
+                System.out.println("Selected Item: " + menuItem.getName());
+                System.out.println("1. Change Name");
+                System.out.println("2. Change Price");
+                System.out.println("3. Change Description");
+                if (menuItem instanceof FoodItem) {
+                    System.out.println("4. Change Cuisine Type");
+                } else if (menuItem instanceof DrinkItem) {
+                    System.out.println("4. Change Beverage Type");
+                }
+                System.out.println("-----------------------------------");
+                System.out.print("Enter your choice: ");
+                int choice = userInput.nextInt();
+                userInput.nextLine();
+
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter new name: ");
+                        menuItem.setName(userInput.nextLine());
+                        System.out.println("-----------------------------------");
+                        System.out.println("Menu item updated successfully.");
+                        break;
+                    case 2:
+                        System.out.print("Enter new price: ");
+                        menuItem.setPrice(userInput.nextDouble());
+                        userInput.nextLine();
+                        System.out.println("-----------------------------------");
+                        System.out.println("Menu item updated successfully.");
+                        break;
+                    case 3:
+                        System.out.print("Enter new description: ");
+                        menuItem.setDescription(userInput.nextLine());
+                        System.out.println("-----------------------------------");
+                        System.out.println("Menu item updated successfully.");
+                        break;
+                    case 4:
+                        if (menuItem instanceof FoodItem) {
+                            System.out.print("Enter new cuisine type: ");
+                            ((FoodItem) menuItem).setCuisineType(userInput.nextLine());
+                            System.out.println("-----------------------------------");
+                        } else if (menuItem instanceof DrinkItem) {
+                            System.out.print("Enter new beverage type: ");
+                            ((DrinkItem) menuItem).setBeverageType(userInput.nextLine());
+                            System.out.println("-----------------------------------");
+                            System.out.println("Menu item updated successfully.");
+                        }
+                        break;
+                    default:
+                        System.out.println("Invalid choice.");
+                        break;
+                }
+            } else {
+                System.out.println("Menu item not found.");
+            }
+        } else {
+            System.out.println("Invalid restaurant selection.");
+        }
+    }
+
+    private void displayMenuItems(Restaurant restaurant) {
+        System.out.println("Menu Items in " + restaurant.getName() + ":");
+        for (MenuItem menuItem : restaurant.getMenu()) {
+            System.out.println("  " + menuItem.getName());
+        }
+        System.out.println("-----------------------------------");
+    }
+
+    // Admin 4. View Data
     private void viewData() {
         for (Restaurant restaurant : restaurants) {
             System.out.println("Restaurant: " + restaurant.getName());
@@ -906,44 +1175,101 @@ public class FoodOrderingSystem {
                 System.out.println("  No menu items available.");
             } else {
                 for (MenuItem item : menu) {
-                    System.out.println("  " + item.getName() + " - $" + item.getPrice());
+                    int stock = restaurant.getInventory().checkAvailability(item);
+                    System.out.println("  " + item.getName() + " - $" + item.getPrice() + " - Stock: " + stock);
                 }
             }
             System.out.println();
         }
     }
 
+    // Admin 5. Restock Item
+    private void restockItem() {
+        displayAllRestaurants();
+        System.out.println("-----------------------------------");
+        System.out.print("Enter restaurant's number to restock one of its menu item: ");
+        int restaurantIndex = userInput.nextInt() - 1;
+        userInput.nextLine();
+        System.out.println("-----------------------------------");
+
+        if (restaurantIndex >= 0 && restaurantIndex < restaurants.size()) {
+            Restaurant selectedRestaurant = restaurants.get(restaurantIndex);
+            displayMenuItems(selectedRestaurant);
+
+            System.out.print("Enter the name of the menu item to restock: ");
+            String itemName = userInput.nextLine();
+            MenuItem menuItem = findMenuItem(selectedRestaurant, itemName);
+
+            if (menuItem != null) {
+                System.out.print("Enter the quantity to add to stock: ");
+                int quantity = userInput.nextInt();
+                userInput.nextLine();
+
+                if (quantity > 0) {
+                    selectedRestaurant.updateInventory(menuItem, quantity);
+                    System.out.println("-----------------------------------");
+                    System.out.println("Restocked " + quantity + " units of " + itemName + ".");
+                } else {
+                    System.out.println("-----------------------------------");
+                    System.out.println("Invalid quantity. Please enter a positive number.");
+                }
+            } else {
+                System.out.println("-----------------------------------");
+                System.out.println("Menu item not found.");
+            }
+        } else {
+            System.out.println("Invalid restaurant selection.");
+        }
+    }
+
+
 
     public void run() {
-        int option;
-        do {
-            displayMenu();
-            option = userInput.nextInt();
-            userInput.nextLine();
-            System.out.println("-----------------------------------");
+        try {
+            int option = -1;
+            do {
+                displayMenu();
+                try {
+                    option = userInput.nextInt();
+                    System.out.println("-----------------------------------");
+                    userInput.nextLine();
+                } catch (InputMismatchException e) {
+                    System.out.println("-----------------------------------");
+                    System.out.println("Invalid input. Please enter a number.");
+                    System.out.println("-----------------------------------");
+                    userInput.nextLine();
+                    continue;
+                }
 
-            switch (option) {
-                case 1:
-                    registerMember();
-                    break;
-                case 2:
-                    placeOrder();
-                    break;
-                case 3:
-                    orderHistory();
-                    break;
-                case 4:
-                    adminLogin();
-                    break;
-                case 5:
-                    System.out.println("Thank you for using FoodieBran. Goodbye !");
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again (1-5).");
-                    break;
-            }
-        } while (option != 5);
+                switch (option) {
+                    case 1:
+                        registerMember();
+                        break;
+                    case 2:
+                        placeOrder();
+                        break;
+                    case 3:
+                        orderHistory();
+                        break;
+                    case 4:
+                        adminLogin();
+                        break;
+                    case 5:
+                        System.out.println("Thank you for using FoodieBran. Goodbye !");
+                        System.out.println("-----------------------------------");
+                        break;
+                    default:
+                        System.out.println("Invalid option. Please try again (1-5).");
+                        System.out.println("-----------------------------------");
+                        break;
+                }
+            } while (option != 5);
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
+        }
+        saveCustomers("customers.txt");
     }
+
 
     public static void main(String[] args) {
         FoodOrderingSystem foodOrderingSystem = new FoodOrderingSystem();
