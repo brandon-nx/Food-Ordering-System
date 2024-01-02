@@ -8,11 +8,10 @@ import java.util.Scanner;
 public class FoodOrderingSystem {
     private SpecialOffer specialOffer;
     private Customer customer;
-    private Order order;
     private MenuItem menuItem;
-    private Scanner userInput;
     private Map<String, Customer> customerMap;
     private List<Restaurant> restaurants;
+    private Scanner userInput;
 
     public FoodOrderingSystem() {
         // Initialise
@@ -84,7 +83,7 @@ public class FoodOrderingSystem {
 
             // Prompt the user to choose restaurant and display its menu
             int option;
-            Restaurant selectedRestaurant = null;
+            Restaurant selectedRestaurant;
             boolean validSelection = false;
 
             do {
@@ -99,59 +98,69 @@ public class FoodOrderingSystem {
                     // Check if a valid restaurant has been selected
                     if (selectedRestaurant != null) {
                         validSelection = true;
-                    } else {
-                        System.out.println("Returning to the main page...");
-                        System.out.println("-----------------------------------");
-                    }
 
+                        // Create a new cart and order for the current customer
+                        Cart cart = new Cart();
+
+                        // Prompt the user to choose which item to order
+                        boolean isOrdering = true;
+                        while (isOrdering) {
+                            System.out.println("Enter the name of the item you want to order (type 'done' to finish, 'view' to view cart):");
+                            String inputOrder = userInput.nextLine();
+
+                            switch (inputOrder.toLowerCase()) {
+                                case "done":
+                                    isOrdering = false;
+                                    if (cart.getItems().isEmpty()) {
+                                        System.out.println("-----------------------------------");
+                                        System.out.println("Your cart is empty. No charges applied.");
+                                        System.out.println("-----------------------------------");
+                                    } else {
+                                        Order.displayOrderSummary(cart);
+
+                                        System.out.print("Please confirm your order (Y/N): ");
+                                        String confirmOrder = userInput.nextLine().toUpperCase();
+                                        System.out.println("-----------------------------------");
+
+                                        if (confirmOrder.equals("Y")) {
+                                            Order newOrder = selectedRestaurant.processOrder(customer, cart);
+                                            if (newOrder != null) {
+                                                customer.getOrderHistory().add(newOrder);
+                                            }
+                                        } else if (confirmOrder.equals("N")) {
+                                            System.out.println("Order cancelled... ");
+                                            System.out.println("Returning to main page... ");
+                                            System.out.println("-----------------------------------");
+                                        }
+                                    }
+                                    break;
+                                case "view":
+                                    cart.displayCartContents();
+                                    break;
+                                default:
+                                    menuItem = MenuItem.findMenuItem(selectedRestaurant, inputOrder);
+                                    if (menuItem != null) {
+                                        System.out.print("Enter quantity: ");
+                                        int inputQuantity = userInput.nextInt();
+                                        userInput.nextLine();
+
+                                        menuItem.handleMenuItemSelection(selectedRestaurant, cart, menuItem, inputOrder, inputQuantity);
+                                    } else {
+                                        System.out.println("-----------------------------------");
+                                        System.out.println("Item not available or not found.");
+                                        System.out.println("-----------------------------------");
+                                    }
+                            }
+                        }
+                    } else {
+                        break;
+                    }
                 } catch (InputMismatchException e) {
                     System.out.println("Invalid input. Please enter a valid number.");
+                    System.out.println("-----------------------------------");
                     userInput.nextLine();
                 }
             } while (!validSelection);
-
-            // Create a new cart and order for the current customer
-            Cart cart = new Cart();
-
-            // Prompt the user to choose which item to order
-            boolean isOrdering = true;
-            while (isOrdering) {
-                System.out.println("Enter the name of the item you want to order (type 'done' to finish, 'view' to view cart):");
-                String inputOrder = userInput.nextLine();
-
-                switch (inputOrder.toLowerCase()) {
-                    case "done":
-                        isOrdering = false;
-                        if (cart.getItems().isEmpty()) {
-                            System.out.println("-----------------------------------");
-                            System.out.println("Your cart is empty. No charges applied.");
-                            System.out.println("-----------------------------------");
-                        } else {
-                            Order.displayOrderSummary(cart);
-                            Order newOrder = selectedRestaurant.processOrder(customer, cart);
-                            if (newOrder != null) {
-                                customer.getOrderHistory().add(newOrder);
-                            }
-                        }
-                        break;
-                    case "view":
-                        cart.displayCartContents();
-                        break;
-                    default:
-                        menuItem = MenuItem.findMenuItem(selectedRestaurant, inputOrder);
-                        if (menuItem != null) {
-                            System.out.print("Enter quantity: ");
-                            int inputQuantity = userInput.nextInt();
-                            userInput.nextLine();
-
-                            menuItem.handleMenuItemSelection(selectedRestaurant, cart, menuItem, inputOrder, inputQuantity);
-                        } else {
-                            System.out.println("-----------------------------------");
-                            System.out.println("Item not available or not found.");
-                            System.out.println("-----------------------------------");
-                        }
-                }
-            }
         }
     }
 

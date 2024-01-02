@@ -35,7 +35,7 @@ public class SpecialOffer {
         boolean hasOffers = false;
         for (Restaurant restaurant : restaurants) {
             for (SpecialOffer offer : restaurant.getSpecialOffers()) {
-                System.out.println("- " + restaurant.getName() + ": " + offer.getOfferDescription());
+                System.out.println("- " + restaurant.getRestaurantName() + ": " + offer.getOfferDescription());
                 hasOffers = true;
             }
         }

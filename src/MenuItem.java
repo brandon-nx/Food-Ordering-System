@@ -1,21 +1,21 @@
-public abstract class MenuItem {
-    private String name;
+abstract class MenuItem {
+    private String itemName;
     private double price;
     private String description;
 
     // Constructor
-    public MenuItem(String name, double price, String description) {
-        this.name = name;
+    public MenuItem(String itemName, double price, String description) {
+        this.itemName = itemName;
         this.price = price;
         this.description = description;
     }
 
     // Getters and Setters
-    public String getName() {
-        return name;
+    public String getItemName() {
+        return itemName;
     }
-    public void setName(String name) {
-        this.name = name;
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
     }
 
     public double getPrice() {
@@ -40,7 +40,7 @@ public abstract class MenuItem {
                 restaurant.updateInventory(menuItem, -itemQuantity);
                 cart.addItem(new CartItem(menuItem, itemQuantity));
                 System.out.println("-----------------------------------");
-                System.out.println("Added " + itemQuantity + " x " + menuItem.getName() + " to your cart.");
+                System.out.println("Added " + itemQuantity + " x " + menuItem.getItemName() + " to your cart.");
                 System.out.println("-----------------------------------");
             } else {
                 System.out.println("-----------------------------------");
@@ -57,11 +57,19 @@ public abstract class MenuItem {
     // Method to find menu time
     public static MenuItem findMenuItem(Restaurant restaurant, String itemName) {
         for (MenuItem menuItem : restaurant.getMenu()) {
-            if (menuItem.getName().equalsIgnoreCase(itemName)) {
+            if (menuItem.getItemName().equalsIgnoreCase(itemName)) {
                 return menuItem;
             }
         }
         return null;
+    }
+
+    public static void displayMenuItems(Restaurant restaurant) {
+        System.out.println("Menu Items in " + restaurant.getRestaurantName() + ":");
+        for (MenuItem menuItem : restaurant.getMenu()) {
+            System.out.println("  " + menuItem.getItemName());
+        }
+        System.out.println("-----------------------------------");
     }
 }
 

@@ -63,7 +63,7 @@ public class Order {
         Map<String, Integer> itemCount = new HashMap<>();
 
         for (CartItem cartItem : cart.getItems()) {
-            String itemName = cartItem.getMenuItem().getName();
+            String itemName = cartItem.getMenuItem().getItemName();
             double itemTotalCost = cartItem.getMenuItem().getPrice() * cartItem.getQuantity();
             itemCount.put(itemName, itemCount.getOrDefault(itemName, 0) + cartItem.getQuantity());
             itemSummary.put(itemName, itemSummary.getOrDefault(itemName, 0.0) + itemTotalCost);

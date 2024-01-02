@@ -6,54 +6,58 @@ import java.util.*;
 
 public class Customer {
     private String memberId;
-    private String name;
+    private String customerName;
     private String contactNumber;
     private String deliveryAddress;
     private List<Order> orderHistory;
 
     // Constructor
-    public Customer(String memberId, String name, String contactNumber, String deliveryAddress) {
+    public Customer(String memberId, String customerName, String contactNumber, String deliveryAddress) {
         this.memberId = memberId;
-        this.name = name;
+        this.customerName = customerName;
         this.contactNumber = contactNumber;
         this.deliveryAddress = deliveryAddress;
         this.orderHistory = new ArrayList<>();
     }
 
     // Getters and Setters
-    public String getMemberId(){
+    public String getMemberId() {
         return memberId;
     }
 
-    public void setMemberId(String memberId){
+    public void setMemberId(String memberId) {
         this.memberId = memberId;
     }
 
-    public String getName(){
-        return name;
+    public String getCustomerName() {
+        return customerName;
     }
 
-    public void setName(String name){
-        this.name = name;
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
     public String getContactNumber() {
         return contactNumber;
     }
-    public void setContactNumber(String contactNumber){
+
+    public void setContactNumber(String contactNumber) {
         this.contactNumber = contactNumber;
     }
 
     public String getDeliveryAddress() {
         return deliveryAddress;
     }
-    public void setDeliveryAddress(String deliveryAddress){
+
+    public void setDeliveryAddress(String deliveryAddress) {
         this.deliveryAddress = deliveryAddress;
     }
-    public List<Order> getOrderHistory () {
+
+    public List<Order> getOrderHistory() {
         return orderHistory;
     }
-    public void setOrderHistory(String deliveryAddress){
+
+    public void setOrderHistory(String deliveryAddress) {
         this.orderHistory = orderHistory;
     }
 
@@ -69,7 +73,7 @@ public class Customer {
         System.out.println("-----------------------------------");
         System.out.println("Order History:");
         for (Order order : orderHistory) {
-            System.out.println("Order at " + order.getRestaurant().getName() + " - Total Cost: $" + String.format("%.2f", order.getTotalCost()));
+            System.out.println("Order at " + order.getRestaurant().getRestaurantName() + " - Total Cost: $" + String.format("%.2f", order.getTotalCost()));
         }
         System.out.println("-----------------------------------");
     }
@@ -88,33 +92,23 @@ public class Customer {
 
     // Method to check if name exists in customer map
     public static boolean isExistingMemberName(Map<String, Customer> customerMap, String name) {
-        return customerMap.values().stream().anyMatch(member -> member.getName().equalsIgnoreCase(name));
-    }
-
-    // Method to serialise a Customer object
-    public String serialise() {
-        return memberId + "," + name + "," + contactNumber + "," + deliveryAddress;
-    }
-
-    // Static method to deserialise a string into a Customer object
-    public static Customer deserialise(String data) {
-        String[] parts = data.split(",");
-        if (parts.length != 4) {
-            throw new IllegalArgumentException("Invalid data format for deserialization");
-        }
-        return new Customer(parts[0], parts[1], parts[2], parts[3]);
+        return customerMap.values().stream().anyMatch(member -> member.getCustomerName().equalsIgnoreCase(name));
     }
 
     // Method to save customers to a file
     public static void saveCustomers(String filename, Map<String, Customer> customerMap) {
         try (FileWriter writer = new FileWriter(filename)) {
             for (Customer customer : customerMap.values()) {
-                writer.write(customer.serialise() + "\n");
+                writer.write(customer.getMemberId() + "," +
+                        customer.getCustomerName() + "," +
+                        customer.getContactNumber() + "," +
+                        customer.getDeliveryAddress() + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
     // Method to load customers from a file
     public static void loadCustomers(String filename, Map<String, Customer> customerMap) {
@@ -122,7 +116,13 @@ public class Customer {
         try (Scanner myReader = new Scanner(myObj)) {
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
-                Customer customer = Customer.deserialise(data);
+                String[] parts = data.split(",");
+
+                if (parts.length != 4) {
+                    throw new IllegalArgumentException("Invalid data format for deserialization");
+                }
+
+                Customer customer = new Customer(parts[0], parts[1], parts[2], parts[3]);
                 customerMap.put(customer.getMemberId(), customer);
             }
         } catch (FileNotFoundException e) {
@@ -130,3 +130,4 @@ public class Customer {
         }
     }
 }
+

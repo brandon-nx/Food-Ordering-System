@@ -1,29 +1,27 @@
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.List;
+import java.util.*;
 
 public class Restaurant {
-    private String name;
+    private String restaurantName;
     private List<MenuItem> menu;
     private List<SpecialOffer> specialOffers;
-    private Inventory inventory;
+    private Map<MenuItem, Integer> stock;
 
 
     // Constructor
-    public Restaurant(String name) {
-        this.name = name;
+    public Restaurant(String restaurantName) {
+        this.restaurantName = restaurantName;
         this.menu = new ArrayList<>();
         this.specialOffers = new ArrayList<>();
-        this.inventory = new Inventory();
+        this.stock = new HashMap<>();
     }
 
 
     // Getters and Setters
-    public String getName() {
-        return name;
+    public String getRestaurantName() {
+        return restaurantName;
     }
-    public void setName(String name) {
-        this.name = name;
+    public void setRestaurantName(String restaurantName) {
+        this.restaurantName = restaurantName;
     }
 
     public List<MenuItem> getMenu() {
@@ -40,22 +38,22 @@ public class Restaurant {
         this.specialOffers = specialOffers;
     }
 
-    public Inventory getInventory() {
-        return inventory;
+    public Map<MenuItem, Integer> getStock() {
+        return stock;
     }
-    public void setInventory(Inventory inventory) {
-        this.inventory = inventory;
+    public void setStock(Map<MenuItem, Integer> stock) {
+        this.stock = stock;
     }
 
     // Method to add item to menu
     public void addToMenu(MenuItem menuItem, int initialStock) {
         menu.add(menuItem);
-        inventory.updateInventory(menuItem, initialStock);
+        updateInventory(menuItem, initialStock);
     }
 
     // Method to remove item from the menu
-    public void removeMenuItem(String itemName) {
-        menu.removeIf(item -> item.getName().equalsIgnoreCase(itemName));
+    public void removeFromMenu(String itemName) {
+        menu.removeIf(item -> item.getItemName().equalsIgnoreCase(itemName));
     }
 
     // Method to add special offer to menu
@@ -103,44 +101,45 @@ public class Restaurant {
 
     // Method to check if the availability of the item
     public boolean isItemAvailable(MenuItem item, int quantity) {
-        return inventory.checkAvailability(item) >= quantity;
+        return stock.getOrDefault(item, 0) >= quantity;
     }
 
     // Method to update the inventory
     public void updateInventory(MenuItem item, int quantity) {
-        inventory.updateInventory(item, quantity);
+        int currentStock = stock.getOrDefault(item, 0);
+        int newStock = currentStock + quantity;
+        if (newStock < 0) {
+            throw new IllegalArgumentException("Cannot have negative stock.");
+        }
+        stock.put(item, newStock);
     }
 
     // Method to display list of restaurants
     public static void displayRestaurants(List<Restaurant> restaurants) {
         System.out.println("Please choose a restaurant or exit:");
         for (int i = 0; i < restaurants.size(); i++) {
-            System.out.println((i + 1) + ". " + restaurants.get(i).getName());
+            System.out.println((i + 1) + ". " + restaurants.get(i).getRestaurantName());
         }
-        System.out.println((restaurants.size() + 1) + ". Return to main page");
         System.out.println("-----------------------------------");
     }
 
     // Method to get the selected restaurant choice and its menu or exit
     public static Restaurant getRestaurantChoiceAndMenu(Integer option, List<Restaurant> restaurants) {
-        if (option == restaurants.size() + 1) {
-            System.out.println("Returning to the main page...");
-            System.out.println("-----------------------------------");
-            return null;
-        } else if (option > 0 && option <= restaurants.size()) {
+        if (option > 0 && option <= restaurants.size()) {
             Restaurant selectedRestaurant = restaurants.get(option - 1);
 
-            System.out.println("Welcome to " + selectedRestaurant.getName() + "!");
+            System.out.println("Welcome to " + selectedRestaurant.getRestaurantName() + "!");
             System.out.println("-----------------------------------");
             System.out.println("Menu:");
             for (MenuItem menuItem : selectedRestaurant.getMenu()) {
-                System.out.println(menuItem.getName() + " - RM" + menuItem.getPrice());
+                System.out.println(menuItem.getItemName() + " - RM" + menuItem.getPrice());
             }
             System.out.println("-----------------------------------");
 
             return selectedRestaurant;
         } else {
             System.out.println("Invalid choice, please try again.");
+            System.out.println("-----------------------------------");
         }
         return null;
     }
