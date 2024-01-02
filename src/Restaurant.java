@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 
 public class Restaurant {
@@ -73,8 +74,7 @@ public class Restaurant {
                     updateInventory(item.getMenuItem(), -item.getQuantity());
                 }
 
-                // Confirm order and display total cost
-                order.confirmOrder();
+                // Display total cost
                 System.out.println("Order confirmed! Total cost: $" + String.format("%.2f", order.getTotalCost()));
                 System.out.println("-----------------------------------");
                 return order;
@@ -106,19 +106,42 @@ public class Restaurant {
         return inventory.checkAvailability(item) >= quantity;
     }
 
-
     // Method to update the inventory
     public void updateInventory(MenuItem item, int quantity) {
         inventory.updateInventory(item, quantity);
     }
 
-    // Method to update menu item price
-    public void updateMenuItemPrice(String itemName, double newPrice) {
-        for (MenuItem item : menu) {
-            if (item.getName().equalsIgnoreCase(itemName)) {
-                item.setPrice(newPrice);
-                break;
-            }
+    // Method to display list of restaurants
+    public static void displayRestaurants(List<Restaurant> restaurants) {
+        System.out.println("Please choose a restaurant or exit:");
+        for (int i = 0; i < restaurants.size(); i++) {
+            System.out.println((i + 1) + ". " + restaurants.get(i).getName());
         }
+        System.out.println((restaurants.size() + 1) + ". Return to main page");
+        System.out.println("-----------------------------------");
+    }
+
+    // Method to get the selected restaurant choice and its menu or exit
+    public static Restaurant getRestaurantChoiceAndMenu(Integer option, List<Restaurant> restaurants) {
+        if (option == restaurants.size() + 1) {
+            System.out.println("Returning to the main page...");
+            System.out.println("-----------------------------------");
+            return null;
+        } else if (option > 0 && option <= restaurants.size()) {
+            Restaurant selectedRestaurant = restaurants.get(option - 1);
+
+            System.out.println("Welcome to " + selectedRestaurant.getName() + "!");
+            System.out.println("-----------------------------------");
+            System.out.println("Menu:");
+            for (MenuItem menuItem : selectedRestaurant.getMenu()) {
+                System.out.println(menuItem.getName() + " - RM" + menuItem.getPrice());
+            }
+            System.out.println("-----------------------------------");
+
+            return selectedRestaurant;
+        } else {
+            System.out.println("Invalid choice, please try again.");
+        }
+        return null;
     }
 }

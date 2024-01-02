@@ -32,6 +32,37 @@ public abstract class MenuItem {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    // Method to handle menu item while ordering
+    public void handleMenuItemSelection(Restaurant restaurant, Cart cart, MenuItem menuItem, String itemName, Integer itemQuantity) {
+        if (itemQuantity > 0) {
+            if (restaurant.isItemAvailable(menuItem, itemQuantity)) {
+                restaurant.updateInventory(menuItem, -itemQuantity);
+                cart.addItem(new CartItem(menuItem, itemQuantity));
+                System.out.println("-----------------------------------");
+                System.out.println("Added " + itemQuantity + " x " + menuItem.getName() + " to your cart.");
+                System.out.println("-----------------------------------");
+            } else {
+                System.out.println("-----------------------------------");
+                System.out.println("Item not available in the desired quantity.");
+                System.out.println("-----------------------------------");
+            }
+        } else {
+            System.out.println("-----------------------------------");
+            System.out.println("Invalid quantity. Please enter a positive number.");
+            System.out.println("-----------------------------------");
+        }
+    }
+
+    // Method to find menu time
+    public static MenuItem findMenuItem(Restaurant restaurant, String itemName) {
+        for (MenuItem menuItem : restaurant.getMenu()) {
+            if (menuItem.getName().equalsIgnoreCase(itemName)) {
+                return menuItem;
+            }
+        }
+        return null;
+    }
 }
 
 class FoodItem extends MenuItem {

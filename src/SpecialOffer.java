@@ -1,3 +1,5 @@
+import java.util.List;
+
 public class SpecialOffer {
     private String offerDescription;
     private double discount;
@@ -25,5 +27,21 @@ public class SpecialOffer {
     // Method to apply the offer
     public double applyOffer(double cost) {
         return cost - (cost * (discount / 100.0));
+    }
+
+    // Method to display the offer
+    public void displayOffers(List<Restaurant> restaurants) {
+        System.out.println("Current Special Offers:");
+        boolean hasOffers = false;
+        for (Restaurant restaurant : restaurants) {
+            for (SpecialOffer offer : restaurant.getSpecialOffers()) {
+                System.out.println("- " + restaurant.getName() + ": " + offer.getOfferDescription());
+                hasOffers = true;
+            }
+        }
+        if (!hasOffers) {
+            System.out.println("No special offers available at the moment.");
+        }
+        System.out.println("-----------------------------------");
     }
 }
