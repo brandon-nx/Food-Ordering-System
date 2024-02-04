@@ -190,7 +190,7 @@ public class FoodOrderingSystem {
         System.out.print("Enter admin password: ");
         String password = userInput.nextLine();
 
-        if (username.equals("admin") && password.equals("12345")) {
+        if (Admin.checkAdminCredentials(username, password)) {
             Admin admin = new Admin(restaurants, userInput);
             admin.showAdminMenu();
         } else {

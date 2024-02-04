@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -61,6 +63,34 @@ public class Admin implements IManageData {
             System.out.println("-----------------------------------");
             System.out.println("Invalid data type. Can only update Restaurant objects.");
         }
+    }
+
+    // Method to check admin credentials
+    public static boolean checkAdminCredentials(String username, String password) {
+        try {
+            File file = new File("admin.txt");
+            Scanner scanner = new Scanner(file);
+
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                String[] credentials = line.split(",");
+
+                if (credentials.length == 2) {
+                    String storedUsername = credentials[0].trim();
+                    String storedPassword = credentials[1].trim();
+
+                    if (username.equals(storedUsername) && password.equals(storedPassword)) {
+                        return true;
+                    }
+                }
+            }
+
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     // Admin: 1. Add Data
